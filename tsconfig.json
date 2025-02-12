@@ -6,6 +6,10 @@
       "DOM.Iterable",
       "ES2022"
     ],
+    "typeRoots": [
+        "./node_modules/payload/dist/types",
+        "./node_modules/@types"
+      ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

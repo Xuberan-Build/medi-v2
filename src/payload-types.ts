@@ -13,16 +13,40 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    questions: Question;
+    plans: Plan;
+    segments: Segment;
+    recommendations: Recommendation;
+    Questionnaires: Questionnaire;
+    'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
+  };
+  collectionsJoins: {};
+  collectionsSelect: {
+    users: UsersSelect<false> | UsersSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    questions: QuestionsSelect<false> | QuestionsSelect<true>;
+    plans: PlansSelect<false> | PlansSelect<true>;
+    segments: SegmentsSelect<false> | SegmentsSelect<true>;
+    recommendations: RecommendationsSelect<false> | RecommendationsSelect<true>;
+    Questionnaires: QuestionnairesSelect<false> | QuestionnairesSelect<true>;
+    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
     defaultIDType: string;
   };
   globals: {};
+  globalsSelect: {};
   locale: null;
   user: User & {
     collection: 'users';
+  };
+  jobs: {
+    tasks: unknown;
+    workflows: unknown;
   };
 }
 export interface UserAuthOperations {
@@ -49,6 +73,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: string;
+  name?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -78,6 +103,301 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions".
+ */
+export interface Question {
+  id: string;
+  questionText: string;
+  dimensionId: 'provider' | 'cost' | 'health' | 'prescriptions' | 'benefits';
+  questionType: 'rating' | 'multipleChoice' | 'boolean';
+  /**
+   * Additional context or help text for this question
+   */
+  description?: string | null;
+  options?:
+    | {
+        label: string;
+        value: string;
+        basePoints: number;
+        segmentScores: {
+          minimizer: number;
+          protector: number;
+          preventer: number;
+          manager: number;
+          loyalist: number;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  order: number;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Medicare plan types and their characteristics
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plans".
+ */
+export interface Plan {
+  id: string;
+  name: string;
+  planType: 'medicareAdvantage' | 'medicareSupplement' | 'medicareAdvantageWellness' | 'medicareAdvantageCondition';
+  /**
+   * Brief overview of the plan (1-2 sentences)
+   */
+  shortDescription: string;
+  /**
+   * Detailed description of the plan
+   */
+  longDescription: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  keyFeatures: {
+    feature: string;
+    id?: string | null;
+  }[];
+  bestFor: {
+    point: string;
+    id?: string | null;
+  }[];
+  considerations: {
+    point: string;
+    id?: string | null;
+  }[];
+  coverage: {
+    monthlyPremiumRange: {
+      min: number;
+      max: number;
+    };
+    annualDeductibleRange: {
+      min: number;
+      max: number;
+    };
+    networkRestrictions: 'none' | 'low' | 'moderate' | 'high';
+  };
+  additionalBenefits?: {
+    dental?: boolean | null;
+    vision?: boolean | null;
+    hearing?: boolean | null;
+    fitness?: boolean | null;
+    transportation?: boolean | null;
+    mealDelivery?: boolean | null;
+    other?:
+      | {
+          benefitName: string;
+          description?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  status: 'draft' | 'published' | 'archived';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * User segments for Medicare plan recommendations
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "segments".
+ */
+export interface Segment {
+  id: string;
+  name: string;
+  segmentId: 'minimizer' | 'protector' | 'preventer' | 'manager' | 'loyalist';
+  description: string;
+  characteristics: {
+    trait: string;
+    id?: string | null;
+  }[];
+  scoringCriteria: {
+    dimension: 'provider' | 'cost' | 'health' | 'prescriptions' | 'benefits';
+    /**
+     * Weight between 0 and 1
+     */
+    weight: number;
+    /**
+     * Ideal score for this dimension (1-5)
+     */
+    preferredScore: number;
+    id?: string | null;
+  }[];
+  planAffinities: {
+    planType: string | Plan;
+    /**
+     * How well this segment matches with the plan type (0-100)
+     */
+    affinityScore: number;
+    reasonings?:
+      | {
+          reason: string;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  matchThresholds: {
+    highConfidence: number;
+    mediumConfidence: number;
+    lowConfidence: number;
+  };
+  status: 'draft' | 'published' | 'archived';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Medicare plan recommendations and results
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "recommendations".
+ */
+export interface Recommendation {
+  id: string;
+  user: string | User;
+  userPreferences: {
+    doctorChoice: {
+      value: number;
+      comments?: string | null;
+    };
+    managedCare: {
+      value: number;
+      comments?: string | null;
+    };
+    domesticTravel: {
+      value: number;
+      comments?: string | null;
+    };
+    yearlyMaximums: {
+      value: number;
+      comments?: string | null;
+    };
+    monthlyPremiums: {
+      value: number;
+      comments?: string | null;
+    };
+    prescriptionPlans: {
+      value: number;
+      comments?: string | null;
+    };
+    dentalVision: {
+      value: number;
+      comments?: string | null;
+    };
+  };
+  scoringResults: {
+    dimensionScores: {
+      provider: number;
+      cost: number;
+      health: number;
+      prescriptions: number;
+      benefits: number;
+    };
+    segmentMatches: {
+      segment: string | Segment;
+      score: number;
+      confidence: number;
+      id?: string | null;
+    }[];
+  };
+  recommendations: {
+    plan: string | Plan;
+    matchScore: number;
+    isPrimary?: boolean | null;
+    reasonsForMatch?:
+      | {
+          reason: string;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  status: 'active' | 'archived';
+  metadata: {
+    createdAt: string;
+    lastViewed?: string | null;
+    source?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Questionnaires".
+ */
+export interface Questionnaire {
+  id: string;
+  responses:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  status: 'started' | 'completed';
+  submittedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents".
+ */
+export interface PayloadLockedDocument {
+  id: string;
+  document?:
+    | ({
+        relationTo: 'users';
+        value: string | User;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: string | Media;
+      } | null)
+    | ({
+        relationTo: 'questions';
+        value: string | Question;
+      } | null)
+    | ({
+        relationTo: 'plans';
+        value: string | Plan;
+      } | null)
+    | ({
+        relationTo: 'segments';
+        value: string | Segment;
+      } | null)
+    | ({
+        relationTo: 'recommendations';
+        value: string | Recommendation;
+      } | null)
+    | ({
+        relationTo: 'Questionnaires';
+        value: string | Questionnaire;
+      } | null);
+  globalSlug?: string | null;
+  user: {
+    relationTo: 'users';
+    value: string | User;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -112,6 +432,323 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions_select".
+ */
+export interface QuestionsSelect<T extends boolean = true> {
+  questionText?: T;
+  dimensionId?: T;
+  questionType?: T;
+  description?: T;
+  options?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        basePoints?: T;
+        segmentScores?:
+          | T
+          | {
+              minimizer?: T;
+              protector?: T;
+              preventer?: T;
+              manager?: T;
+              loyalist?: T;
+            };
+        id?: T;
+      };
+  order?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plans_select".
+ */
+export interface PlansSelect<T extends boolean = true> {
+  name?: T;
+  planType?: T;
+  shortDescription?: T;
+  longDescription?: T;
+  keyFeatures?:
+    | T
+    | {
+        feature?: T;
+        id?: T;
+      };
+  bestFor?:
+    | T
+    | {
+        point?: T;
+        id?: T;
+      };
+  considerations?:
+    | T
+    | {
+        point?: T;
+        id?: T;
+      };
+  coverage?:
+    | T
+    | {
+        monthlyPremiumRange?:
+          | T
+          | {
+              min?: T;
+              max?: T;
+            };
+        annualDeductibleRange?:
+          | T
+          | {
+              min?: T;
+              max?: T;
+            };
+        networkRestrictions?: T;
+      };
+  additionalBenefits?:
+    | T
+    | {
+        dental?: T;
+        vision?: T;
+        hearing?: T;
+        fitness?: T;
+        transportation?: T;
+        mealDelivery?: T;
+        other?:
+          | T
+          | {
+              benefitName?: T;
+              description?: T;
+              id?: T;
+            };
+      };
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "segments_select".
+ */
+export interface SegmentsSelect<T extends boolean = true> {
+  name?: T;
+  segmentId?: T;
+  description?: T;
+  characteristics?:
+    | T
+    | {
+        trait?: T;
+        id?: T;
+      };
+  scoringCriteria?:
+    | T
+    | {
+        dimension?: T;
+        weight?: T;
+        preferredScore?: T;
+        id?: T;
+      };
+  planAffinities?:
+    | T
+    | {
+        planType?: T;
+        affinityScore?: T;
+        reasonings?:
+          | T
+          | {
+              reason?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  matchThresholds?:
+    | T
+    | {
+        highConfidence?: T;
+        mediumConfidence?: T;
+        lowConfidence?: T;
+      };
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "recommendations_select".
+ */
+export interface RecommendationsSelect<T extends boolean = true> {
+  user?: T;
+  userPreferences?:
+    | T
+    | {
+        doctorChoice?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        managedCare?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        domesticTravel?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        yearlyMaximums?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        monthlyPremiums?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        prescriptionPlans?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+        dentalVision?:
+          | T
+          | {
+              value?: T;
+              comments?: T;
+            };
+      };
+  scoringResults?:
+    | T
+    | {
+        dimensionScores?:
+          | T
+          | {
+              provider?: T;
+              cost?: T;
+              health?: T;
+              prescriptions?: T;
+              benefits?: T;
+            };
+        segmentMatches?:
+          | T
+          | {
+              segment?: T;
+              score?: T;
+              confidence?: T;
+              id?: T;
+            };
+      };
+  recommendations?:
+    | T
+    | {
+        plan?: T;
+        matchScore?: T;
+        isPrimary?: T;
+        reasonsForMatch?:
+          | T
+          | {
+              reason?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  status?: T;
+  metadata?:
+    | T
+    | {
+        createdAt?: T;
+        lastViewed?: T;
+        source?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "Questionnaires_select".
+ */
+export interface QuestionnairesSelect<T extends boolean = true> {
+  responses?: T;
+  status?: T;
+  submittedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents_select".
+ */
+export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
+  document?: T;
+  globalSlug?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-preferences_select".
+ */
+export interface PayloadPreferencesSelect<T extends boolean = true> {
+  user?: T;
+  key?: T;
+  value?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-migrations_select".
+ */
+export interface PayloadMigrationsSelect<T extends boolean = true> {
+  name?: T;
+  batch?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

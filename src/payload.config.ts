@@ -1,4 +1,4 @@
-// storage-adapter-import-placeholder
+// payload.config.ts
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -6,21 +6,27 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Questions } from './collections/Questions'
+import { Plans } from './collections/Plans'
+import { Segments } from './collections/Segments'
+import { Recommendations } from './collections/Recommendations'
+import { Questionnaires } from './collections/Questionnaires'
+
+import { seed } from './seeds/seedData'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
+    user: 'users',
     importMap: {
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Questions, Plans, Segments, Recommendations, Questionnaires],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -32,6 +38,14 @@ export default buildConfig({
   sharp,
   plugins: [
     payloadCloudPlugin(),
-    // storage-adapter-placeholder
   ],
+  onInit: async (payload) => {
+    console.log('Starting initialization and seeding process...')
+    try {
+      await seed(payload)
+      console.log('Seeding completed successfully')
+    } catch (err) {
+      console.error('Error during seeding:', err)
+    }
+  }
 })
