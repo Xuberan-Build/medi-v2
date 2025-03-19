@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+  <!-- Simple Medicare PlanIt Logo -->
+  
+  <!-- Main Text: Medicare PlanIt -->
+  <g>
+    <!-- "Medicare" Text -->
+    <text x="20" y="60" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="38" font-weight="600" fill="#333333" letter-spacing="-0.5">Medi</text>
+    <text x="110" y="60" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="38" font-weight="600" fill="#005eb8" letter-spacing="-0.5">care</text>
+    
+    <!-- "PlanIt" Text -->
+    <text x="210" y="60" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="38" font-weight="600" fill="#333333" letter-spacing="-0.5">Plan</text>
+    <text x="290" y="60" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="38" font-weight="600" fill="#005eb8" letter-spacing="-0.5">It</text>
+  </g>
+  
+  <!-- Simple Icon Element -->
+  <circle cx="360" cy="50" r="15" fill="#51afcb" />
+  <path d="M350,50 L358,58 L370,45" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

@@ -13,6 +13,9 @@ import { Plans } from './collections/Plans'
 import { Segments } from './collections/Segments'
 import { Recommendations } from './collections/Recommendations'
 import { Questionnaires } from './collections/Questionnaires'
+import { Pages } from './collections/Pages'
+import { PageCategories } from './collections/PageCategories'
+import { Links } from './collections/Links'
 
 import { seed } from './seeds/seedData'
 
@@ -26,7 +29,18 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Questions, Plans, Segments, Recommendations, Questionnaires],
+  collections: [
+    Users,
+    Media,
+    Questions,
+    Plans,
+    Segments,
+    Recommendations,
+    Questionnaires,
+    Pages,
+    PageCategories,
+    Links,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -36,9 +50,7 @@ export default buildConfig({
     url: process.env.DATABASE_URI || '',
   }),
   sharp,
-  plugins: [
-    payloadCloudPlugin(),
-  ],
+  plugins: [payloadCloudPlugin()],
   onInit: async (payload) => {
     console.log('Starting initialization and seeding process...')
     try {
@@ -47,5 +59,5 @@ export default buildConfig({
     } catch (err) {
       console.error('Error during seeding:', err)
     }
-  }
+  },
 })
