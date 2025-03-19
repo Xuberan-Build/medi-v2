@@ -1,34 +1,35 @@
 import { Payload } from 'payload'
 import { questionsData } from './questionData'
+import { seedPageCategories } from './pageData/categoryData'
 
 // Type Definitions
 interface QuestionOption {
-  label: string;
-  value: string;
-  basePoints: number;
+  label: string
+  value: string
+  basePoints: number
   segmentScores: {
-    minimizer: number;
-    protector: number;
-    preventer: number;
-    manager: number;
-    loyalist: number;
-  };
+    minimizer: number
+    protector: number
+    preventer: number
+    manager: number
+    loyalist: number
+  }
 }
 
 interface Question {
-  questionText: string;
-  dimensionId: 'provider' | 'cost' | 'health' | 'prescriptions' | 'benefits';
-  questionType: 'rating' | 'multipleChoice' | 'boolean';
-  description: string;
-  options: QuestionOption[];
-  order: number;
-  active: boolean;
+  questionText: string
+  dimensionId: 'provider' | 'cost' | 'health' | 'prescriptions' | 'benefits'
+  questionType: 'rating' | 'multipleChoice' | 'boolean'
+  description: string
+  options: QuestionOption[]
+  order: number
+  active: boolean
 }
 
 interface SeedResults {
-  successful: number;
-  failed: number;
-  errors: string[];
+  successful: number
+  failed: number
+  errors: string[]
 }
 
 // Main seed function that gets called from payload.config.ts
@@ -38,7 +39,7 @@ export const seed = async (payload: Payload): Promise<void> => {
     // Check for existing questions
     const existingQuestions = await payload.find({
       collection: 'questions',
-      limit: 0
+      limit: 0,
     })
 
     // Clear existing questions if any exist
@@ -46,12 +47,23 @@ export const seed = async (payload: Payload): Promise<void> => {
       console.log(`Found ${existingQuestions.totalDocs} existing questions. Clearing...`)
       await payload.delete({
         collection: 'questions',
-        where: {}
+        where: {},
       })
       console.log('Existing questions cleared.')
     }
 
+    // Seed questions first
     await seedQuestions(payload)
+
+    // Then seed page categories
+    try {
+      await seedPageCategories(payload)
+      console.log('Page categories seeded successfully')
+    } catch (pageError) {
+      console.error('Error seeding page categories:', pageError)
+      // Continue execution even if page category seeding fails
+    }
+
     console.log('Seed completed successfully')
   } catch (error) {
     console.error('Error in seed process:', error)
@@ -67,12 +79,14 @@ export const seedQuestions = async (payload: Payload): Promise<void> => {
     const results: SeedResults = {
       successful: 0,
       failed: 0,
-      errors: []
+      errors: [],
     }
 
     // Seed each question with detailed logging
     for (const [index, question] of questionsData.entries()) {
-      console.log(`\n[${index + 1}/${questionsData.length}] Attempting to seed question: "${question.questionText}"`)
+      console.log(
+        `\n[${index + 1}/${questionsData.length}] Attempting to seed question: "${question.questionText}"`,
+      )
 
       try {
         // Check if question already exists
@@ -80,9 +94,9 @@ export const seedQuestions = async (payload: Payload): Promise<void> => {
           collection: 'questions',
           where: {
             questionText: {
-              equals: question.questionText
-            }
-          }
+              equals: question.questionText,
+            },
+          },
         })
 
         if (existing.totalDocs > 0) {
@@ -99,12 +113,11 @@ export const seedQuestions = async (payload: Payload): Promise<void> => {
         // Try to create the question
         const result = await payload.create({
           collection: 'questions',
-          data: question
+          data: question,
         })
 
         console.log(`✓ Successfully created question with ID: ${result.id}`)
         results.successful++
-
       } catch (err: any) {
         results.failed++
         const errorMessage = `Failed to seed question "${question.questionText}": ${err.message}`
@@ -134,11 +147,10 @@ export const seedQuestions = async (payload: Payload): Promise<void> => {
     // Verify final state
     const verifyCount = await payload.find({
       collection: 'questions',
-      limit: 0
+      limit: 0,
     })
 
     console.log(`\nFinal database state: ${verifyCount.totalDocs} total questions`)
-
   } catch (error) {
     console.error('Fatal error in seed process:', error)
     throw error
@@ -148,7 +160,13 @@ export const seedQuestions = async (payload: Payload): Promise<void> => {
 // Helper function to validate question data
 function validateQuestionData(question: any): question is Question {
   // Check required fields
-  const requiredFields = ['questionText', 'dimensionId', 'questionType', 'options', 'order'] as const
+  const requiredFields = [
+    'questionText',
+    'dimensionId',
+    'questionType',
+    'options',
+    'order',
+  ] as const
   for (const field of requiredFields) {
     if (!question[field]) {
       console.error(`Missing required field: ${field}`)

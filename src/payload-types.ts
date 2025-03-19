@@ -18,6 +18,9 @@ export interface Config {
     segments: Segment;
     recommendations: Recommendation;
     Questionnaires: Questionnaire;
+    pages: Page;
+    'page-categories': PageCategory;
+    links: Link;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -31,6 +34,9 @@ export interface Config {
     segments: SegmentsSelect<false> | SegmentsSelect<true>;
     recommendations: RecommendationsSelect<false> | RecommendationsSelect<true>;
     Questionnaires: QuestionnairesSelect<false> | QuestionnairesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    'page-categories': PageCategoriesSelect<false> | PageCategoriesSelect<true>;
+    links: LinksSelect<false> | LinksSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -358,6 +364,263 @@ export interface Questionnaire {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: string;
+  title: string;
+  /**
+   * This will be used as the URL for this page
+   */
+  slug: string;
+  /**
+   * Select the primary category/pillar for this page
+   */
+  category: string | PageCategory;
+  /**
+   * Select a parent page if this page should be nested under another page
+   */
+  parentPage?: (string | null) | Page;
+  /**
+   * Custom breadcrumb path (leave empty to use the default path)
+   */
+  breadcrumb?:
+    | {
+        label: string;
+        page?: (string | null) | Page;
+        id?: string | null;
+      }[]
+    | null;
+  pageTemplate: 'standard' | 'landing' | 'comparison' | 'faq';
+  /**
+   * Controls visibility in navigation
+   */
+  isVisible?: boolean | null;
+  /**
+   * Controls sorting within category
+   */
+  order?: number | null;
+  content?:
+    | (
+        | {
+            text: {
+              root: {
+                type: string;
+                children: {
+                  type: string;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'text';
+          }
+        | {
+            image: string | Media;
+            caption?: string | null;
+            size?: ('small' | 'normal' | 'large' | 'fullWidth') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'image';
+          }
+        | {
+            headline: string;
+            text?: string | null;
+            buttonText?: string | null;
+            buttonLink?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'callToAction';
+          }
+        | {
+            heading: string;
+            benefits?:
+              | {
+                  benefit: string;
+                  description?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'benefitsList';
+          }
+        | {
+            heading: string;
+            faqs?:
+              | {
+                  question: string;
+                  answer: {
+                    root: {
+                      type: string;
+                      children: {
+                        type: string;
+                        version: number;
+                        [k: string]: unknown;
+                      }[];
+                      direction: ('ltr' | 'rtl') | null;
+                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                      indent: number;
+                      version: number;
+                    };
+                    [k: string]: unknown;
+                  };
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'faqBlock';
+          }
+        | {
+            heading: string;
+            plans?:
+              | {
+                  planName: string;
+                  planFeatures?:
+                    | {
+                        feature: string;
+                        value: string;
+                        id?: string | null;
+                      }[]
+                    | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'planComparisonTable';
+          }
+      )[]
+    | null;
+  /**
+   * Select pages that are related to this content
+   */
+  relatedPages?: (string | Page)[] | null;
+  /**
+   * Controls how search engines understand this page in relation to similar content
+   */
+  canonicalType?: ('self' | 'other' | 'none') | null;
+  /**
+   * Select the canonical version of this page
+   */
+  canonicalPage?: (string | null) | Page;
+  /**
+   * Enter external canonical URL (only if "Other Page" is not selected)
+   */
+  canonicalURL?: string | null;
+  /**
+   * Prevent search engines from indexing this page
+   */
+  noIndex?: boolean | null;
+  seo?: {
+    /**
+     * Override the default page title for search engines (leave blank to use page title)
+     */
+    metaTitle?: string | null;
+    /**
+     * Brief description of this page for search results and social sharing
+     */
+    metaDescription?: string | null;
+    /**
+     * Image for social sharing (Facebook, Twitter, etc.)
+     */
+    ogImage?: (string | null) | Media;
+    /**
+     * Comma-separated keywords (less important for modern SEO)
+     */
+    keywords?: string | null;
+  };
+  status: 'draft' | 'published' | 'archived';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-categories".
+ */
+export interface PageCategory {
+  id: string;
+  name: string;
+  /**
+   * URL-friendly version of the category name (no spaces or special characters)
+   */
+  slug: string;
+  description?: string | null;
+  /**
+   * Select a parent category if this is a subcategory
+   */
+  parentCategory?: (string | null) | PageCategory;
+  /**
+   * Controls the sorting order of categories
+   */
+  order?: number | null;
+  icon?: (string | null) | Media;
+  /**
+   * Check if this is a main content pillar for SEO purposes
+   */
+  isMainPillar?: boolean | null;
+  showInMainNav?: boolean | null;
+  showInFooter?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "links".
+ */
+export interface Link {
+  id: string;
+  label: string;
+  linkType: 'internal' | 'external' | 'file' | 'email';
+  /**
+   * Select the page to link to
+   */
+  internalPage?: (string | null) | Page;
+  /**
+   * Enter the full URL, including https://
+   */
+  url?: string | null;
+  /**
+   * Enter the email address
+   */
+  emailAddress?: string | null;
+  /**
+   * Open link in a new browser tab
+   */
+  openInNewTab?: boolean | null;
+  /**
+   * Where this link will be used
+   */
+  linkCategory: 'main-navigation' | 'footer' | 'sidebar' | 'in-content' | 'resource';
+  /**
+   * If this is a child link in a dropdown, select the parent link
+   */
+  parentLink?: (string | null) | Link;
+  /**
+   * Controls the display order
+   */
+  order?: number | null;
+  /**
+   * Optional icon for the link
+   */
+  icon?: (string | null) | Media;
+  /**
+   * Optional description text (for mega-menus or tooltips)
+   */
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -390,6 +653,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'Questionnaires';
         value: string | Questionnaire;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: string | Page;
+      } | null)
+    | ({
+        relationTo: 'page-categories';
+        value: string | PageCategory;
+      } | null)
+    | ({
+        relationTo: 'links';
+        value: string | Link;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -715,6 +990,156 @@ export interface QuestionnairesSelect<T extends boolean = true> {
   responses?: T;
   status?: T;
   submittedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  parentPage?: T;
+  breadcrumb?:
+    | T
+    | {
+        label?: T;
+        page?: T;
+        id?: T;
+      };
+  pageTemplate?: T;
+  isVisible?: T;
+  order?: T;
+  content?:
+    | T
+    | {
+        text?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+              blockName?: T;
+            };
+        image?:
+          | T
+          | {
+              image?: T;
+              caption?: T;
+              size?: T;
+              id?: T;
+              blockName?: T;
+            };
+        callToAction?:
+          | T
+          | {
+              headline?: T;
+              text?: T;
+              buttonText?: T;
+              buttonLink?: T;
+              id?: T;
+              blockName?: T;
+            };
+        benefitsList?:
+          | T
+          | {
+              heading?: T;
+              benefits?:
+                | T
+                | {
+                    benefit?: T;
+                    description?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        faqBlock?:
+          | T
+          | {
+              heading?: T;
+              faqs?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        planComparisonTable?:
+          | T
+          | {
+              heading?: T;
+              plans?:
+                | T
+                | {
+                    planName?: T;
+                    planFeatures?:
+                      | T
+                      | {
+                          feature?: T;
+                          value?: T;
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+      };
+  relatedPages?: T;
+  canonicalType?: T;
+  canonicalPage?: T;
+  canonicalURL?: T;
+  noIndex?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+        keywords?: T;
+      };
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-categories_select".
+ */
+export interface PageCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  parentCategory?: T;
+  order?: T;
+  icon?: T;
+  isMainPillar?: T;
+  showInMainNav?: T;
+  showInFooter?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "links_select".
+ */
+export interface LinksSelect<T extends boolean = true> {
+  label?: T;
+  linkType?: T;
+  internalPage?: T;
+  url?: T;
+  emailAddress?: T;
+  openInNewTab?: T;
+  linkCategory?: T;
+  parentLink?: T;
+  order?: T;
+  icon?: T;
+  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }
