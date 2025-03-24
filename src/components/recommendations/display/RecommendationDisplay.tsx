@@ -1,6 +1,6 @@
 // components/recommendations/display/RecommendationDisplay.tsx
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { RecommendationDisplayProps } from './types'
 import PrimaryCard from '../cards/PrimaryCard'
 import AlternativeCard from '../cards/AlternativeCard'
@@ -11,6 +11,13 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
   onAdjustPreferences
 }) => {
   const { primaryRecommendation, alternativeRecommendation, metadata } = recommendation
+  const [calculatedDate, setCalculatedDate] = useState<string>('')
+
+  useEffect(() => {
+    if (metadata?.calculatedAt) {
+      setCalculatedDate(new Date(metadata.calculatedAt).toLocaleDateString())
+    }
+  }, [metadata?.calculatedAt])
 
   const renderConfidenceLabel = (confidence: 'high' | 'medium' | 'low') => {
     const styles = {
@@ -18,6 +25,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
       medium: 'bg-yellow-100 text-yellow-800',
       low: 'bg-red-100 text-red-800'
     }
+
 
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${styles[confidence]}`}>
@@ -76,7 +84,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Medicare Plan Recommendation</h2>
         <p className="text-gray-600">
-          Based on your responses on {new Date(metadata?.createdAt || metadata?.calculatedAt).toLocaleDateString()}
+          Based on your responses on {calculatedDate}
         </p>
       </div>
 

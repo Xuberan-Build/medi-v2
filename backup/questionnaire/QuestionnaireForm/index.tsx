@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { FormData, FormInputValue, ValidationErrors } from './types'
-import { steps } from '@/config/questionnaire-steps'
+import { steps } from '@/components/questionnaire/form-config'
 
 const INITIAL_FORM_DATA: FormData = {
   doctor_choice: { value: 0 },
@@ -219,8 +219,8 @@ export default function QuestionnaireForm() {
 
         <div className="mb-8">
           <p className="text-gray-600 mb-6">{steps[step].description}</p>
-          {steps[step].fields(formData, handleInputChange, validationErrors)}
-        </div>
+          {/* {steps[step].fields(formData, handleInputChange, validationErrors)} */}
+          </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md">

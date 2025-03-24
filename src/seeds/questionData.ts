@@ -1,7 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // questionData.ts
-
-import { Payload } from 'payload'
-
 // First, let's define our dimension weights with clear documentation
 const DIMENSION_WEIGHTS = {
   doctorChoice: {

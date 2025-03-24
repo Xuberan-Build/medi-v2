@@ -24,7 +24,7 @@ export default function Error({
             Something went wrong!
           </h2>
           <p className="text-gray-600">
-            We're sorry, but we encountered an error while loading the questionnaire.
+            We`re sorry, but we encountered an error while loading the questionnaire.
             Please try again or contact support if the problem persists.
           </p>
         </div>
