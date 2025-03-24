@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Payload } from 'payload'
 
 interface Plan {
@@ -101,7 +102,7 @@ export const seedPlans = async (payload: Payload): Promise<void> => {
     try {
       const result = await payload.create({
         collection: "plans",
-        data: plan,
+        data: plan as any,
       })
       console.log(`✅ Successfully created plan: ${result.id}`)
     } catch (error) {

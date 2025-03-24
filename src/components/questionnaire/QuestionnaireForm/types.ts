@@ -1,4 +1,3 @@
-// src/components/questionnaire/QuestionnaireForm/types.ts
 import React from 'react'
 
 export interface Location {

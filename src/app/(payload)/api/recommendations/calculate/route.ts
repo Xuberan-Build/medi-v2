@@ -1,15 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/(payload)/api/recommendations/calculate/route.ts
 
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
-import { calculateScore } from '../utils/calculateScore'
-import { validateInput } from '../utils/validateInput'
-import type { Submission, QuestionnaireResponses, UserPreferences} from '../types'
-import { DimensionId, PlanType, QuestionnaireResponse, RecommendationResult} from 'src/components/recommendations/engine/types.ts'
+import type { Submission } from '../types'
+import { DimensionId, QuestionnaireResponse, RecommendationResult} from 'src/components/recommendations/engine/types'
 import { prepareResponsesForScoring } from '@/components/recommendations/engine/validation'
 import { calculateRecommendation } from '@/components/recommendations/engine/scoring'
-import { DOCTOR_CHOICE_OPTIONS } from '@/components/questionnaire/form-config'
 export async function GET(req: any) {  // Change Request type to any for now to access payload
   console.log('[API] Received request for recommendation calculation')
 

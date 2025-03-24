@@ -142,7 +142,7 @@ export default async function HomePage() {
                   }
                 ].map((testimonial, index) => (
                   <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
-                    <p className="text-slate-600 mb-4">"{testimonial.quote}"</p>
+                    <p className="text-slate-600 mb-4">`{testimonial.quote}`</p>
                     <p className="font-semibold">{testimonial.author}</p>
                     <p className="text-sm text-slate-500">{testimonial.type}</p>
                   </div>
