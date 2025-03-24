@@ -33,7 +33,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -50,7 +50,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -67,7 +67,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -84,7 +84,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -101,7 +101,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -118,7 +118,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {
@@ -135,7 +135,7 @@ export const Recommendations: CollectionConfig = {
               name: 'value',
               type: 'number',
               required: true,
-              min: 1,
+              min: 0,
               max: 5,
             },
             {

@@ -6,7 +6,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Shield, Clock, DollarSign } from 'lucide-react'
 import config from '@/payload.config'
-console.log('MongoDB URI:', process.env.MONGODB_URI)
+console.log('MongoDB URI:', process.env.DATABASE_URI)
 export default async function HomePage() {
   try {
     // Maintain Payload admin access

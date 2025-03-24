@@ -23,15 +23,17 @@ export function useRecommendation() {
           return
         }
 
-        const response = await fetch(`/api/recommendations/calculate?id=${submissionId}`);
+        const response = await fetch(`/api/recommendations/calculate?id=${submissionId}`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
         console.log(`[useRecommendation] Fetch response status: ${response.status}`);
 
-        const data = await response.json().catch(err => {
-          console.error(`[useRecommendation] Error parsing response as JSON:`, err);
-          return null;
-        });
+        // const data = await response.json().catch(err => {
+        //   console.error(`[useRecommendation] Error parsing response as JSON:`, err);
+        //   return null;
+        // });
 
-        console.log(`[useRecommendation] Fetch response body:`, data);
+        // console.log(`[useRecommendation] Fetch response body:`, data);
 
         if (!response.ok) {
           const errorText = await response.text()
