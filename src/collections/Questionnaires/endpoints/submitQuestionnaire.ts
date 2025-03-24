@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 ///Users/Worker/plan-it/medi-planit/src/collections/Questionnaires/endpoints/submitQuestionnaire.ts
 import { type Endpoint, type PayloadHandler } from 'payload'
 import type { Request } from 'express'
@@ -33,13 +34,13 @@ const handler: PayloadHandler = async (...args: any[]): Promise<Response> => {
     try {
       body = JSON.parse(text)
     } catch (err) {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+      return NextResponse.json({ error: `Invalid JSON ${err}` }, { status: 400 })
     }
   } else if (typeof req.body === 'string') {
     try {
       body = JSON.parse(req.body)
     } catch (err) {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+      return NextResponse.json({ error: `Invalid JSON ${err}` }, { status: 400 })
     }
   } else {
     body = req.body || {}

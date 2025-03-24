@@ -3,7 +3,6 @@
 import {
     QuestionnaireResponse,
     DimensionId,
-    DimensionWeight
   } from './types';
 
   interface ValidationError {
