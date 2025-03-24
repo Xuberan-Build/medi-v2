@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Payload } from 'payload'
 import { questionsData } from './questionData'
 import { seedPageCategories } from './pageData/categoryData'

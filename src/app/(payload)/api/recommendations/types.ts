@@ -1,6 +1,4 @@
 // src/app/(payload)/api/recommendations/types.ts
-import type { PayloadRequest } from "payload";
-
 
 
 // Add this interface for the questionnaire responses

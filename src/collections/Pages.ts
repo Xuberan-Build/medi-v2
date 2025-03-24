@@ -103,7 +103,10 @@ export const Pages: CollectionConfig = {
       blocks: [
         {
           slug: 'text',
-          label: 'Text',
+          labels: {
+            singular: 'Text',
+            plural: 'Texts'
+          },
           fields: [
             {
               name: 'text',
@@ -114,7 +117,10 @@ export const Pages: CollectionConfig = {
         },
         {
           slug: 'image',
-          label: 'Image',
+          labels: {
+            singular: 'Image',
+            plural: 'Images'
+          },
           fields: [
             {
               name: 'image',
@@ -141,7 +147,10 @@ export const Pages: CollectionConfig = {
         },
         {
           slug: 'callToAction',
-          label: 'Call to Action',
+          labels: {
+            singular: 'Call to Action',
+            plural: 'Call to Actions'
+          },
           fields: [
             {
               name: 'headline',
@@ -164,7 +173,11 @@ export const Pages: CollectionConfig = {
         },
         {
           slug: 'benefitsList',
-          label: 'Benefits List',
+          labels: {
+            singular: 'Benefits List',
+            plural: 'Benefits Lists'
+          }
+          ,
           fields: [
             {
               name: 'heading',
@@ -190,8 +203,10 @@ export const Pages: CollectionConfig = {
         },
         {
           slug: 'faqBlock',
-          label: 'FAQ Section',
-          fields: [
+          labels: {
+            singular: 'Faq Section',
+            plural: 'Faq Sections',
+          },          fields: [
             {
               name: 'heading',
               type: 'text',
@@ -217,8 +232,10 @@ export const Pages: CollectionConfig = {
         },
         {
           slug: 'planComparisonTable',
-          label: 'Plan Comparison Table',
-          fields: [
+          labels: {
+            singular: 'Plan Comparison Table',
+            plural: 'Plan Comparison Tables',
+          },          fields: [
             {
               name: 'heading',
               type: 'text',

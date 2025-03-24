@@ -115,8 +115,7 @@ import {
    * Identifies special considerations based on response patterns
    */
   function identifySpecialConsiderations(
-    responses: QuestionnaireResponse[],
-    breakdown: ScoreBreakdown[]
+    responses: QuestionnaireResponse[]
   ): SpecialConsideration[] {
     const considerations: SpecialConsideration[] = [];
 
@@ -172,7 +171,7 @@ import {
     const totalScore = breakdown.reduce((sum, dim) => sum + dim.contribution, 0);
 
     // Identify special considerations
-    const specialConsiderations = identifySpecialConsiderations(responses, breakdown);
+    const specialConsiderations = identifySpecialConsiderations(responses);
 
     // Determine primary plan type based on total score
     const primaryPlanType = totalScore > 50 ?

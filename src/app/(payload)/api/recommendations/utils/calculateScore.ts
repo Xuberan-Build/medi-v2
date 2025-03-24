@@ -55,7 +55,7 @@ export async function calculateScore(preferences: UserPreferences) {
 
   // Calculate segment matches
   const segmentMatches = segments.docs.map(segment => {
-    const score = calculateSegmentScore(dimensionScores, segment)
+    const score = calculateSegmentScore(dimensionScores)
     const confidence = calculateConfidence(score)
     console.log(`[calculateScore] Segment ID: ${segment.id}, Score: ${score}, Confidence: ${confidence}`)
     return { segment: segment.id, score, confidence }
@@ -107,8 +107,7 @@ function calculateBenefitsScore(preferences: UserPreferences) {
 }
 
 function calculateSegmentScore(
-  dimensionScores: Record<string, number>,
-  segment: any
+  dimensionScores: Record<string, number>
 ) {
   const score = Object.entries(dimensionScores).reduce((total, [dimension, score]) => {
     const weight = DIMENSION_WEIGHTS[dimension as keyof typeof DIMENSION_WEIGHTS]

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Payload } from 'payload'
 
 export const seedSegments = async (payload: Payload): Promise<void> => {
@@ -72,7 +73,7 @@ export const seedSegments = async (payload: Payload): Promise<void> => {
     try {
       const result = await payload.create({
         collection: 'segments',
-        data: segment
+        data: segment as any
       })
       console.log(`✅ Successfully created segment: ${result.id}`)
     } catch (error) {

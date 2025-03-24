@@ -18,6 +18,7 @@ export const useQuestions = () => {
         )
         setQuestions(sortedQuestions)
       } catch (err) {
+        console.log(err)
         setError('Failed to fetch questions')
       } finally {
         setLoading(false)
