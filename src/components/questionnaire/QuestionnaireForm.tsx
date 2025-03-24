@@ -34,7 +34,7 @@ const QuestionnaireForm: React.FC = () => {
     setIsSubmitting(true);
     try {
       const submissionData = methods.getValues();
-      const response = await fetch('/api/questionnaires/submit', {
+      const response = await fetch('/api/Questionnaires/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ responses: submissionData }),

@@ -76,7 +76,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Medicare Plan Recommendation</h2>
         <p className="text-gray-600">
-          Based on your responses on {new Date(metadata.calculatedAt).toLocaleDateString()}
+          Based on your responses on {new Date(metadata?.createdAt || metadata?.calculatedAt).toLocaleDateString()}
         </p>
       </div>
 

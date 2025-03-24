@@ -59,21 +59,35 @@ import {
 
     switch (response.dimensionId) {
       case DimensionId.DOCTOR_CHOICE:
-        score = (6 - response.rating) * 25; // Invert for Supplement
+        if (response.rating === 0) {
+          score = 0;
+      } else {
+          score = (6 - response.rating) * 25; // Invert for Supplement
+        }
         favoredPlan = response.rating > 3 ? PlanType.MEDICARE_SUPPLEMENT : PlanType.MEDICARE_ADVANTAGE;
         break;
       case DimensionId.COST_STRUCTURE:
         score = response.rating * 20;
         favoredPlan = response.rating > 3 ? PlanType.MEDICARE_ADVANTAGE : PlanType.MEDICARE_SUPPLEMENT;
         break;
-      case DimensionId.TRAVEL_NEEDS:
-        score = (6 - response.rating) * 15; // Invert for Supplement
-        favoredPlan = response.rating > 2 ? PlanType.MEDICARE_SUPPLEMENT : PlanType.MEDICARE_ADVANTAGE;
-        break;
-      case DimensionId.HEALTHCARE_USAGE:
-        score = (6 - response.rating) * 15; // Invert for Supplement
-        favoredPlan = response.rating > 3 ? PlanType.MEDICARE_SUPPLEMENT : PlanType.MEDICARE_ADVANTAGE;
-        break;
+        case DimensionId.TRAVEL_NEEDS:
+          if (response.rating === 0) {
+              score = 0;
+          } else {
+              score = (6 - response.rating) * 15; // Invert for Supplement
+          }
+          favoredPlan = response.rating > 2 ? PlanType.MEDICARE_SUPPLEMENT : PlanType.MEDICARE_ADVANTAGE;
+          break;
+      
+          case DimensionId.HEALTHCARE_USAGE:
+            if (response.rating === 0) {
+                score = 0;
+            } else {
+                score = (6 - response.rating) * 15;
+            }
+            favoredPlan = response.rating > 3 ? PlanType.MEDICARE_SUPPLEMENT : PlanType.MEDICARE_ADVANTAGE;
+            break;
+        
       case DimensionId.PRESCRIPTION_NEEDS:
         score = response.rating * 10;
         favoredPlan = response.rating > 2 ? PlanType.MEDICARE_ADVANTAGE : PlanType.MEDICARE_SUPPLEMENT;

@@ -160,7 +160,7 @@ export interface Plan {
   /**
    * Detailed description of the plan
    */
-  longDescription: {
+  longDescription?: {
     root: {
       type: string;
       children: {
@@ -174,7 +174,7 @@ export interface Plan {
       version: number;
     };
     [k: string]: unknown;
-  };
+  } | null;
   keyFeatures: {
     feature: string;
     id?: string | null;

@@ -1,7 +1,9 @@
 // src/app/(payload)/api/recommendations/utils/calculateScore.ts
 import { UserPreferences } from '../types'
 import { validateInput } from './validateInput'
-import payload from 'payload'
+import { getPayload } from 'payload'
+import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
+import { NextResponse } from 'next/server'
 
 const DIMENSION_WEIGHTS = {
   provider: 0.25,
@@ -32,7 +34,12 @@ export async function calculateScore(preferences: UserPreferences) {
     benefits: calculateBenefitsScore(preferences)
   }
   console.log('[calculateScore] Calculated dimension scores:', dimensionScores)
+   const payload = await getPayload({ config: payloadConfig })
 
+    if (!payload) {
+      console.error('[API] Failed to initialize Payload')
+      return NextResponse.json({ error: 'Payload initialization failed' }, { status: 500 })
+    }
   // Fetch active segments
   let segments
   try {

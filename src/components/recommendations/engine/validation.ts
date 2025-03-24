@@ -24,7 +24,7 @@ import {
   ];
 
   const RATING_RANGE = {
-    MIN: 1,
+    MIN: 0,
     MAX: 5
   };
 
