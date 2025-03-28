@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/(payload)/api/recommendations/calculate/route.ts
-
 import { NextResponse } from 'next/server'
+import { calculateScore } from '../utils/calculateScore'
+import { validateInput } from '../utils/validateInput'
+import type { Submission, QuestionnaireResponses, UserPreferences } from '../types'
 import { getPayload } from 'payload'
-import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
-import type { Submission } from '../types'
-import { DimensionId, QuestionnaireResponse, RecommendationResult} from 'src/components/recommendations/engine/types'
-import { prepareResponsesForScoring } from '@/components/recommendations/engine/validation'
-import { calculateRecommendation } from '@/components/recommendations/engine/scoring'
-export async function GET(req: any) {  // Change Request type to any for now to access payload
+import payloadConfig from '@/payload.config'
+
+export async function GET(req: Request) {
   console.log('[API] Received request for recommendation calculation')
 
   try {
@@ -21,7 +19,7 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       return NextResponse.json({ error: 'Submission ID is required' }, { status: 400 })
     }
 
-    // Initialize Payload instance using getPayloadHMR
+    // Get payload using the proper method
     const payload = await getPayload({ config: payloadConfig })
 
     if (!payload) {
@@ -29,13 +27,12 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       return NextResponse.json({ error: 'Payload initialization failed' }, { status: 500 })
     }
 
-    // Fetch questionnaire responses
-    const submission = await payload.findByID({
-      collection: 'Questionnaires',
+    // Fetch questionnaire responses with depth for nested data
+    const submission = (await payload.findByID({
+      collection: 'Questionnaires', // Use capital Q - case sensitive
       id: submissionId,
-      depth: 2
-    }) as Submission | any
-
+      depth: 2,
+    })) as Submission | null
     console.log('[API] Fetched submission:', submission)
 
     if (!submission?.responses) {
@@ -43,183 +40,198 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       return NextResponse.json({ error: 'Invalid submission data' }, { status: 400 })
     }
 
-    // const { responses } = submission as { responses: QuestionnaireResponses }
-    const responses = submission.responses
+    const { responses } = submission as { responses: QuestionnaireResponses }
 
-    const questionnaireResponses: QuestionnaireResponse[] = [
-      { dimensionId: DimensionId.DOCTOR_CHOICE, rating: Number(responses.doctor_choice) },
-      { dimensionId: DimensionId.MANAGED_CARE, rating: Number(responses.managed_care) },
-      { dimensionId: DimensionId.HEALTHCARE_USAGE, rating: Number(responses.yearly_maximums) },
-      { dimensionId: DimensionId.TRAVEL_NEEDS, rating: Number(responses.domestic_travel) },
-      { dimensionId: DimensionId.COST_STRUCTURE, rating: Number(responses.monthly_premiums) },
-      { dimensionId: DimensionId.PRESCRIPTION_NEEDS, rating: Number(responses.prescription_plans) },
-      { dimensionId: DimensionId.ADDITIONAL_BENEFITS, rating: Number(responses.dental_vision.value) }
-    ]
-
-    console.log('[API] Raw Questionnaire Responses:', questionnaireResponses)
-
-    // const formattedResponses: { userPreferences: UserPreferences } = {
-    //   userPreferences: {
-    //     doctorChoice: { value: Number(responses.doctor_choice) || 0 },
-    //     managedCare: { value: Number(responses.managed_care) || 0 },
-    //     domesticTravel: { value: Number(responses.domestic_travel) || 0 },
-    //     yearlyMaximums: { value: Number(responses.yearly_maximums) || 0 },
-    //     monthlyPremiums: { value: Number(responses.monthly_premiums) || 0 },
-    //     prescriptionPlans: { value: Number(responses.prescription_plans) || 0 },
-    //     dentalVision: { value: Number(responses.dental_vision?.value) || 0 }
-    //   }
-    // }
-
-    // console.log('[API] Formatted responses for scoring:', formattedResponses)
-
-    // Validate and sanitize responses
-    const validatedResponses = prepareResponsesForScoring(questionnaireResponses)
-    if (!validatedResponses) {
-      return NextResponse.json({ error: 'Invalid responses provided' }, { status: 400 })
+    // Format the responses with proper typing
+    const formattedResponses: { userPreferences: UserPreferences } = {
+      userPreferences: {
+        doctorChoice: { value: Number(responses.doctor_choice) || 0 },
+        managedCare: { value: Number(responses.managed_care) || 0 },
+        domesticTravel: { value: Number(responses.domestic_travel) || 0 },
+        yearlyMaximums: { value: Number(responses.yearly_maximums) || 0 },
+        monthlyPremiums: { value: Number(responses.monthly_premiums) || 0 },
+        prescriptionPlans: { value: Number(responses.prescription_plans) || 0 },
+        dentalVision: { value: Number(responses.dental_vision?.value) || 0 },
+      },
     }
 
-    console.log('[API] Validated Responses:', validatedResponses)
+    console.log('[API] Formatted responses for scoring:', formattedResponses)
 
+    // Validate input
+    try {
+      validateInput(formattedResponses.userPreferences)
+      console.log('[API] Input validation passed')
+    } catch (validationError) {
+      console.error('[API] Input validation failed:', validationError)
+      return NextResponse.json({ error: 'Invalid user preferences data' }, { status: 400 })
+    }
 
-    // const scoringResults = await calculateScore(formattedResponses.userPreferences)
-    // console.log('[API] Scoring results:', scoringResults)
+    // Calculate recommendation
+    const scoringResults = await calculateScore(formattedResponses.userPreferences)
+    console.log('[API] Scoring results:', scoringResults)
 
-    // // Generate segment matches in the expected format
-    // const formattedSegmentMatches = scoringResults?.segmentMatches.length > 0
-    // ? scoringResults?.segmentMatches.map(match => ({
-    //     segment: match.segment,
-    //     score: match.score,
-    //     confidence: match.confidence,
-    //   }))
-    // : [{ segment: '67de3233711c56093c22501a', score: 0, confidence: 0 }];
-  
-    // const user = await payload.find({
-    //   collection: 'users',
-    //   where: { email: { equals: responses.email } }
-    // });
-    
-    // const userId = user.docs.length > 0 ? user.docs[0].id : null;
-    
-    // if (!userId) {
-    //   console.error('[API] No user found with the provided email');
-    //   return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    // }
+    // Fetch user from database or create if needed
+    // For now, we'll use a simple approach that works with the existing requirements
+    // In a real-world app, you'd look up the user by email first
+    const userData: any = {
+      email: responses.email,
+      name: responses.name || 'Anonymous',
+    }
 
-        // Calculate recommendation
-        const recommendationResult: RecommendationResult = calculateRecommendation(validatedResponses)
-    console.log('[API] Recommendation Result:', recommendationResult)
+    let user = null
+    try {
+      // Try to find existing user by email
+      const existingUsers = await payload.find({
+        collection: 'users',
+        where: {
+          email: { equals: userData.email },
+        },
+      })
 
-        // Extract dimension scores
-        const dimensionScores = {
-          provider: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.DOCTOR_CHOICE)?.score || 0,
-          cost: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.COST_STRUCTURE)?.score || 0,
-          health: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.HEALTHCARE_USAGE)?.score || 0,
-          prescriptions: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.PRESCRIPTION_NEEDS)?.score || 0,
-          benefits: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.ADDITIONAL_BENEFITS)?.score || 0
-        }
-    
-    // Fetching plan IDs based on their names
-
-        const plans = await payload.find({
-          collection: 'plans',
-          where: {
-            name: { in: ['Medicare Supplement', 'Medicare Advantage'] }
-          }
-        });
-        
-        const planIds: Record<string, string> = {};
-        plans.docs.forEach((plan: any) => {
-          planIds[plan.name] = plan.id;
-        });
-        
-        if (!planIds['Medicare Supplement'] || !planIds['Medicare Advantage']) {
-          console.error('[API] One or both plans not found in the database.');
-          return NextResponse.json({ error: 'Required plans not found in the database' }, { status: 400 });
-        }
-    
-        // Prepare recommendations array for storage
-        const recommendations = recommendationResult.primaryRecommendation ? [{
-          plan: planIds[recommendationResult.primaryRecommendation.planType],
-          matchScore: recommendationResult.primaryRecommendation.totalScore,
-          isPrimary: true,
-          reasonsForMatch: recommendationResult.primaryRecommendation.breakdown.map(breakdown => ({
-            reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`
-          }))
-        }] : []
-    
-        if (recommendationResult.alternativeRecommendation) {
-          recommendations.push({
-            plan: planIds[recommendationResult.alternativeRecommendation.planType],
-            matchScore: recommendationResult.alternativeRecommendation.totalScore,
-            isPrimary: false,
-            reasonsForMatch: recommendationResult.alternativeRecommendation.breakdown.map(breakdown => ({
-              reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`
-            }))
-          })
-        }
-    
-        const segments = await payload.find({
-          collection: 'segments',
-          limit: 100
-        });
-        
-        const segmentMatches = segments.docs.map((segment: any) => ({
-          segment: segment.id,
-          score: 0,
-          confidence: 0
-        }));
-    
-        const user = await payload.find({
+      if (existingUsers.docs.length > 0) {
+        user = existingUsers.docs[0]
+        console.log('[API] Found existing user:', user.id)
+      } else {
+        // Create a new user
+        user = await payload.create({
           collection: 'users',
-          where: { email: { equals: responses.email } }
-        });
-        
-        const userId = user.docs.length > 0 ? user.docs[0].id : null;
-        
-    if (!userId) {
-      console.error('[API] No user found with the provided email');
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-        
-        
-    // Create new recommendation record
-    const recommendation = await payload.create({
-      collection: 'recommendations',
-      data: {
-        user: userId || 'Anonymous',
-        userPreferences: {
-          doctorChoice: { value: Number(responses.doctor_choice) },
-          managedCare: { value: Number(responses.managed_care) },
-          domesticTravel: { value: Number(responses.domestic_travel) || 0 },
-          yearlyMaximums: { value: Number(responses.yearly_maximums) },
-          monthlyPremiums: { value: Number(responses.monthly_premiums) },
-          prescriptionPlans: { value: Number(responses.prescription_plans) },
-          dentalVision: { value: Number(responses.dental_vision?.value) }
-        },
-        scoringResults: {
-          dimensionScores,
-          segmentMatches  // If you have segment logic, add them here
-        },
-        recommendations,
-        status: 'active',
-        metadata: {
-          createdAt: new Date().toISOString(),
-          lastViewed: new Date().toISOString(),
-          source: 'Questionnaire'
-        }
+          data: userData,
+        })
+        console.log('[API] Created new user:', user.id)
       }
-    })
-    
+    } catch (error) {
+      console.error('[API] Error handling user:', error)
+      return NextResponse.json({ error: 'Failed to process user data' }, { status: 500 })
+    }
 
+    // Prepare plans data for recommendation
+    // Get segment-matched plans
+    const topSegment = scoringResults.segmentMatches[0]
+    let planRecommendations: any[] = []
 
-    console.log('[API] Created recommendation:', recommendation)
-    return NextResponse.json(recommendationResult)
+    if (topSegment) {
+      try {
+        // Get the segment details to access plan affinities
+        const segmentDetails = await payload.findByID({
+          collection: 'segments',
+          id: topSegment.segment.toString(),
+          depth: 2,
+        })
 
+        // Use the segment's plan affinities to generate recommendations
+        if (
+          segmentDetails &&
+          segmentDetails.planAffinities &&
+          segmentDetails.planAffinities.length > 0
+        ) {
+          // Sort plan affinities by affinity score
+          const sortedAffinities = [...segmentDetails.planAffinities].sort(
+            (a, b) => b.affinityScore - a.affinityScore,
+          )
+
+          // Create recommendations based on plan affinities
+          planRecommendations = sortedAffinities.map((affinity) => ({
+            plan: affinity.planType,
+            matchScore: affinity.affinityScore,
+            isPrimary: sortedAffinities.indexOf(affinity) === 0, // First plan is primary
+            reasonsForMatch: affinity.reasonings || [],
+          }))
+        } else {
+          console.log('[API] No plan affinities found for segment')
+          // Basic fallback recommendations
+          planRecommendations = getDefaultRecommendations(scoringResults.dimensionScores)
+        }
+      } catch (error) {
+        console.error('[API] Error getting segment details:', error)
+        // Fallback to basic recommendations
+        planRecommendations = getDefaultRecommendations(scoringResults.dimensionScores)
+      }
+    } else {
+      console.log('[API] No segment match found')
+      // Fallback to basic recommendations
+      planRecommendations = getDefaultRecommendations(scoringResults.dimensionScores)
+    }
+
+    // Create recommendation record
+    try {
+      const recommendation = await payload.create({
+        collection: 'recommendations',
+        data: {
+          user: user.id, // Now using the actual user ID reference
+          userPreferences: formattedResponses.userPreferences,
+          scoringResults: scoringResults,
+          recommendations: planRecommendations,
+          status: 'active',
+          metadata: {
+            createdAt: new Date().toISOString(),
+            lastViewed: new Date().toISOString(),
+            source: 'Questionnaire',
+          },
+        },
+      })
+
+      console.log('[API] Created recommendation:', recommendation.id)
+      return NextResponse.json(recommendation)
+    } catch (error) {
+      console.error('[API] Error creating recommendation:', error)
+      return NextResponse.json(
+        {
+          error: 'Failed to create recommendation',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        { status: 500 },
+      )
+    }
   } catch (error) {
     console.error('[API] Detailed Error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
+}
+
+// Fallback function to generate basic recommendations when segment data isn't available
+function getDefaultRecommendations(dimensionScores: Record<string, number>) {
+  // Calculate average score - higher favors Medicare Advantage, lower favors Medicare Supplement
+  const totalScore = Object.values(dimensionScores).reduce((sum, score) => sum + score, 0)
+  const avgScore = totalScore / Object.values(dimensionScores).length
+
+  const recommendations = []
+
+  if (avgScore > 50) {
+    // Higher score favors Medicare Advantage
+    recommendations.push({
+      plan: 'medicareAdvantage',
+      matchScore: avgScore,
+      isPrimary: true,
+      reasonsForMatch: [{ reason: 'Based on your overall preferences' }],
+    })
+
+    // Add a secondary recommendation
+    recommendations.push({
+      plan: 'medicareSupplement',
+      matchScore: 100 - avgScore,
+      isPrimary: false,
+      reasonsForMatch: [{ reason: 'Alternative option to consider' }],
+    })
+  } else {
+    // Lower score favors Medicare Supplement
+    recommendations.push({
+      plan: 'medicareSupplement',
+      matchScore: 100 - avgScore,
+      isPrimary: true,
+      reasonsForMatch: [{ reason: 'Based on your overall preferences' }],
+    })
+
+    // Add a secondary recommendation
+    recommendations.push({
+      plan: 'medicareAdvantage',
+      matchScore: avgScore,
+      isPrimary: false,
+      reasonsForMatch: [{ reason: 'Alternative option to consider' }],
+    })
+  }
+
+  return recommendations
 }

@@ -8,9 +8,16 @@ import { ScoreBreakdown, SpecialConsideration } from '../engine/types'
 
 export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
   recommendation,
-  onAdjustPreferences
+  onAdjustPreferences,
 }) => {
-  const { primaryRecommendation, alternativeRecommendation, metadata } = recommendation
+  // Add null check - use optional chaining and provide defaults
+  const primaryRecommendation = recommendation?.primaryRecommendation || {
+    confidence: 'medium',
+    breakdown: [],
+    specialConsiderations: [],
+  }
+  const alternativeRecommendation = recommendation?.alternativeRecommendation
+  const metadata = recommendation?.metadata || {}
   const [calculatedDate, setCalculatedDate] = useState<string>('')
 
   useEffect(() => {
@@ -23,19 +30,23 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
     const styles = {
       high: 'bg-green-100 text-green-800',
       medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-red-100 text-red-800'
+      low: 'bg-red-100 text-red-800',
     }
 
+    // Add fallback for undefined confidence
+    const confidenceValue = confidence || 'medium'
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${styles[confidence]}`}>
-        {confidence.charAt(0).toUpperCase() + confidence.slice(1)} Confidence
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${styles[confidenceValue]}`}
+      >
+        {confidenceValue.charAt(0).toUpperCase() + confidenceValue.slice(1)} Confidence
       </span>
     )
   }
 
-  const renderSpecialConsiderations = (considerations: SpecialConsideration[]) => {
-    if (considerations.length === 0) return null
+  const renderSpecialConsiderations = (considerations: SpecialConsideration[] = []) => {
+    if (!considerations || considerations.length === 0) return null
 
     return (
       <div className="mt-4 p-4 bg-blue-50 rounded-lg">
@@ -43,7 +54,8 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
         <ul className="space-y-2">
           {considerations.map((consideration, index) => (
             <li key={index} className="text-sm text-blue-700">
-              <span className="font-medium">{consideration.description}</span>: {consideration.impact}
+              <span className="font-medium">{consideration.description}</span>:{' '}
+              {consideration.impact}
             </li>
           ))}
         </ul>
@@ -51,7 +63,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
     )
   }
 
-  const renderScoreBreakdown = (breakdown: ScoreBreakdown[]) => (
+  const renderScoreBreakdown = (breakdown: ScoreBreakdown[] = []) => (
     <div className="mt-6">
       <h4 className="text-sm font-medium text-gray-900 mb-3">Score Breakdown</h4>
       <div className="space-y-2">
@@ -59,9 +71,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
           <div key={index} className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium text-gray-700">
-                  {item.dimensionId}
-                </span>
+                <span className="text-sm font-medium text-gray-700">{item.dimensionId}</span>
                 <span className="text-sm text-gray-500">
                   {Math.round(item.contribution)} points
                 </span>
@@ -69,7 +79,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${(item.contribution / (item.weight * 100)) * 100}%` }}
+                  style={{ width: `${(item.contribution / ((item.weight || 1) * 100)) * 100}%` }}
                 />
               </div>
             </div>
@@ -79,21 +89,28 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
     </div>
   )
 
+  // Add a loading state to prevent rendering when data isn't available
+  if (!recommendation) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-600">Loading recommendation data...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Medicare Plan Recommendation</h2>
         <p className="text-gray-600">
-          Based on your responses on {calculatedDate}
+          Based on your responses {calculatedDate ? `on ${calculatedDate}` : ''}
         </p>
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-xl font-semibold text-gray-900">
-              Primary Recommendation
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-900">Primary Recommendation</h3>
             {renderConfidenceLabel(primaryRecommendation.confidence)}
           </div>
 
@@ -106,9 +123,7 @@ export const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({
       {alternativeRecommendation && (
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Alternative to Consider
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Alternative to Consider</h3>
             <AlternativeCard
               recommendation={alternativeRecommendation}
               primaryPlanType={primaryRecommendation.planType}

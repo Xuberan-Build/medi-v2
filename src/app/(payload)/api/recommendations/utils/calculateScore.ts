@@ -2,15 +2,17 @@
 import { UserPreferences } from '../types'
 import { validateInput } from './validateInput'
 import { getPayload } from 'payload'
-import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
-import { NextResponse } from 'next/server'
+import payloadConfig from '@/payload.config'
 
+// Define dimension weights
 const DIMENSION_WEIGHTS = {
   provider: 0.25,
   cost: 0.2,
-  health: 0.2,
-  prescriptions: 0.2,
-  benefits: 0.15
+  health: 0.15,
+  travel: 0.15,
+  prescriptions: 0.1,
+  benefits: 0.1,
+  managed: 0.05,
 }
 
 export async function calculateScore(preferences: UserPreferences) {
@@ -30,22 +32,27 @@ export async function calculateScore(preferences: UserPreferences) {
     provider: calculateProviderScore(preferences),
     cost: calculateCostScore(preferences),
     health: calculateHealthScore(preferences),
+    travel: calculateTravelScore(preferences),
     prescriptions: calculatePrescriptionScore(preferences),
-    benefits: calculateBenefitsScore(preferences)
+    benefits: calculateBenefitsScore(preferences),
+    managed: calculateManagedCareScore(preferences),
   }
   console.log('[calculateScore] Calculated dimension scores:', dimensionScores)
-   const payload = await getPayload({ config: payloadConfig })
 
-    if (!payload) {
-      console.error('[API] Failed to initialize Payload')
-      return NextResponse.json({ error: 'Payload initialization failed' }, { status: 500 })
-    }
+  // Use the new getPayload approach as per payload CMS docs
+  const payload = await getPayload({ config: payloadConfig })
+
+  if (!payload) {
+    console.error('[calculateScore] Failed to initialize Payload')
+    throw new Error('Payload initialization failed')
+  }
+
   // Fetch active segments
   let segments
   try {
     segments = await payload.find({
       collection: 'segments',
-      where: { status: { equals: 'active' } }
+      where: { status: { equals: 'published' } },
     })
     console.log(`[calculateScore] Fetched ${segments.docs.length} active segments`)
   } catch (error) {
@@ -54,10 +61,12 @@ export async function calculateScore(preferences: UserPreferences) {
   }
 
   // Calculate segment matches
-  const segmentMatches = segments.docs.map(segment => {
+  const segmentMatches = segments.docs.map((segment) => {
     const score = calculateSegmentScore(dimensionScores)
     const confidence = calculateConfidence(score)
-    console.log(`[calculateScore] Segment ID: ${segment.id}, Score: ${score}, Confidence: ${confidence}`)
+    console.log(
+      `[calculateScore] Segment ID: ${segment.id}, Score: ${score}, Confidence: ${confidence}`,
+    )
     return { segment: segment.id, score, confidence }
   })
 
@@ -68,50 +77,124 @@ export async function calculateScore(preferences: UserPreferences) {
 
   return {
     dimensionScores,
-    segmentMatches
+    segmentMatches,
   }
 }
 
 // Helper functions for score calculations with added logging
+
+// Fix: Added check for value === 0 to return 0
 function calculateProviderScore(preferences: UserPreferences) {
   const { doctorChoice, managedCare } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (doctorChoice.value === 0 || managedCare.value === 0) {
+    console.log('[calculateProviderScore] Rating is 0, score: 0')
+    return 0
+  }
+
   const score = (doctorChoice.value * 0.6 + managedCare.value * 0.4) * 20
   console.log('[calculateProviderScore] Score:', score)
   return score
 }
 
+// Fix: Added check for value === 0 to return 0
 function calculateCostScore(preferences: UserPreferences) {
   const { monthlyPremiums, yearlyMaximums } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (monthlyPremiums.value === 0 || yearlyMaximums.value === 0) {
+    console.log('[calculateCostScore] Rating is 0, score: 0')
+    return 0
+  }
+
   const score = (monthlyPremiums.value * 0.7 + yearlyMaximums.value * 0.3) * 20
   console.log('[calculateCostScore] Score:', score)
   return score
 }
 
+// Fix: Added check for value === 0 to return 0
 function calculateHealthScore(preferences: UserPreferences) {
   const { domesticTravel, yearlyMaximums } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (domesticTravel.value === 0 || yearlyMaximums.value === 0) {
+    console.log('[calculateHealthScore] Rating is 0, score: 0')
+    return 0
+  }
+
   const score = (domesticTravel.value * 0.3 + yearlyMaximums.value * 0.7) * 20
   console.log('[calculateHealthScore] Score:', score)
   return score
 }
 
+// Fix: Added check for value === 0 to return 0
+function calculateTravelScore(preferences: UserPreferences) {
+  const { domesticTravel } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (domesticTravel.value === 0) {
+    console.log('[calculateTravelScore] Rating is 0, score: 0')
+    return 0
+  }
+
+  // Fixed inversion formula
+  // 5 (frequent travel) should favor Medicare Supplement (high score)
+  // 1 (rare travel) should favor Medicare Advantage (low score)
+  const score = domesticTravel.value * 20
+  console.log('[calculateTravelScore] Score:', score)
+  return score
+}
+
+// Fix: Added check for value === 0 to return 0
 function calculatePrescriptionScore(preferences: UserPreferences) {
-  const score = preferences.prescriptionPlans.value * 20
+  const { prescriptionPlans } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (prescriptionPlans.value === 0) {
+    console.log('[calculatePrescriptionScore] Rating is 0, score: 0')
+    return 0
+  }
+
+  const score = prescriptionPlans.value * 20
   console.log('[calculatePrescriptionScore] Score:', score)
   return score
 }
 
+// Fix: Added check for value === 0 to return 0
 function calculateBenefitsScore(preferences: UserPreferences) {
-  const score = preferences.dentalVision.value * 20
+  const { dentalVision } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (dentalVision.value === 0) {
+    console.log('[calculateBenefitsScore] Rating is 0, score: 0')
+    return 0
+  }
+
+  const score = dentalVision.value * 20
   console.log('[calculateBenefitsScore] Score:', score)
   return score
 }
 
-function calculateSegmentScore(
-  dimensionScores: Record<string, number>
-) {
+// Fix: Added check for value === 0 to return 0
+function calculateManagedCareScore(preferences: UserPreferences) {
+  const { managedCare } = preferences
+
+  // If rating is 0 (no preference), score is 0
+  if (managedCare.value === 0) {
+    console.log('[calculateManagedCareScore] Rating is 0, score: 0')
+    return 0
+  }
+
+  const score = managedCare.value * 20
+  console.log('[calculateManagedCareScore] Score:', score)
+  return score
+}
+
+function calculateSegmentScore(dimensionScores: Record<string, number>) {
   const score = Object.entries(dimensionScores).reduce((total, [dimension, score]) => {
     const weight = DIMENSION_WEIGHTS[dimension as keyof typeof DIMENSION_WEIGHTS]
-    return total + (score * weight)
+    return total + score * weight
   }, 0)
   console.log('[calculateSegmentScore] Segment score:', score)
   return score
