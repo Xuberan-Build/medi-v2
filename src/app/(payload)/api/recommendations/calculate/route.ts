@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { calculateScore } from '../utils/calculateScore'
 import { validateInput } from '../utils/validateInput'
-import type { Submission, QuestionnaireResponses, UserPreferences } from '../types'
+import type { QuestionnaireResponses, UserPreferences } from '../types'
 import { getPayload } from 'payload'
 import payloadConfig from '@/payload.config'
 
@@ -28,19 +28,21 @@ export async function GET(req: Request) {
     }
 
     // Fetch questionnaire responses with depth for nested data
-    const submission = (await payload.findByID({
+    const questionnaireResult = await payload.findByID({
       collection: 'Questionnaires', // Use capital Q - case sensitive
       id: submissionId,
       depth: 2,
-    })) as Submission | null
-    console.log('[API] Fetched submission:', submission)
+    })
 
-    if (!submission?.responses) {
-      console.error('[API] Invalid or missing responses in submission')
-      return NextResponse.json({ error: 'Invalid submission data' }, { status: 400 })
+    console.log('[API] Fetched questionnaire:', questionnaireResult)
+
+    if (!questionnaireResult?.responses) {
+      console.error('[API] Invalid or missing responses in questionnaire')
+      return NextResponse.json({ error: 'Invalid questionnaire data' }, { status: 400 })
     }
 
-    const { responses } = submission as { responses: QuestionnaireResponses }
+    // Type assertion for responses - safely convert to expected structure
+    const responses = questionnaireResult.responses as unknown as QuestionnaireResponses
 
     // Format the responses with proper typing
     const formattedResponses: { userPreferences: UserPreferences } = {
