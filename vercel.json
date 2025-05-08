@@ -1,23 +1,11 @@
 {
   "buildCommand": "next build",
   "functions": {
-    "api/health/route.ts": {
+    "app/api/health/route.js": {
       "memory": 1024,
       "maxDuration": 10
     },
-    "app/api/health/route.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
-    "api/**/route.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
-    "app/api/**/route.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
-    "app/(payload)/api/**/route.ts": {
+    "app/*/api/**/route.js": {
       "memory": 1024,
       "maxDuration": 10
     }
