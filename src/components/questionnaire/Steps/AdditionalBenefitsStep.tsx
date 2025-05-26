@@ -1,7 +1,7 @@
 // src/components/questionnaire/Steps/AdditionalBenefitsStep.tsx
 
-import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import React from 'react'
+import { useFormContext } from 'react-hook-form'
 
 const BENEFITS = [
   { value: 'dental', label: 'Dental coverage' },
@@ -9,24 +9,29 @@ const BENEFITS = [
   { value: 'hearing', label: 'Hearing aids' },
   { value: 'fitness', label: 'Fitness membership' },
   { value: 'transportation', label: 'Transportation to medical appointments' },
-  { value: 'meal-delivery', label: 'Meal delivery after hospital stays' }
-];
+  { value: 'meal-delivery', label: 'Meal delivery after hospital stays' },
+]
 
 const AdditionalBenefitsStep: React.FC = () => {
-  const { register, watch, setValue, formState: { errors } } = useFormContext();
-  const selectedBenefits = watch('extraBenefits', []);
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext()
+  const selectedBenefits = watch('extraBenefits', [])
 
   const handleBenefitChange = (benefit: string, isChecked: boolean) => {
     const newBenefits: string[] = isChecked
       ? [...selectedBenefits, benefit]
-      : selectedBenefits.filter((b: string) => b !== benefit);
+      : selectedBenefits.filter((b: string) => b !== benefit)
 
-    setValue('extraBenefits', newBenefits);
+    setValue('extraBenefits', newBenefits)
 
     // Auto-update 'dental_vision' based on selected benefits
-    const hasDentalOrVision = newBenefits.some((b: string) => ['dental', 'vision'].includes(b));
-    setValue('dental_vision', { value: hasDentalOrVision ? 5 : 1 });
-  };
+    const hasDentalOrVision = newBenefits.some((b: string) => ['dental', 'vision'].includes(b))
+    setValue('dental_vision', { value: hasDentalOrVision ? 5 : 1 })
+  }
 
   return (
     <div className="space-y-6">
@@ -35,12 +40,13 @@ const AdditionalBenefitsStep: React.FC = () => {
           Which additional benefits interest you? (Select all that apply)
         </label>
         <div className="space-y-3">
-          {BENEFITS.map(benefit => (
+          {BENEFITS.map((benefit) => (
             <label key={benefit.value} className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 {...register('extraBenefits')}
                 checked={selectedBenefits.includes(benefit.value)}
+                checked={selectedBenefits?.includes?.(benefit.value) || false}
                 onChange={(e) => handleBenefitChange(benefit.value, e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
               />
@@ -85,7 +91,7 @@ const AdditionalBenefitsStep: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AdditionalBenefitsStep;
+export default AdditionalBenefitsStep

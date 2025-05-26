@@ -1,5 +1,5 @@
 import { Payload } from 'payload'
-import { questionsData } from './questionData'
+import { questionsData } from './questionData-fixed'
 import { seedPageCategories } from './pageData/categoryData'
 
 // Type Definitions
