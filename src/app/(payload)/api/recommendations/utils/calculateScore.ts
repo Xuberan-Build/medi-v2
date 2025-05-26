@@ -1,7 +1,9 @@
 // src/app/(payload)/api/recommendations/utils/calculateScore.ts
 import { UserPreferences } from '../types'
 import { validateInput } from './validateInput'
-import payload from 'payload'
+import { getPayload } from 'payload'
+import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
+import { NextResponse } from 'next/server'
 
 const DIMENSION_WEIGHTS = {
   provider: 0.25,
@@ -32,7 +34,12 @@ export async function calculateScore(preferences: UserPreferences) {
     benefits: calculateBenefitsScore(preferences)
   }
   console.log('[calculateScore] Calculated dimension scores:', dimensionScores)
+   const payload = await getPayload({ config: payloadConfig })
 
+    if (!payload) {
+      console.error('[API] Failed to initialize Payload')
+      return NextResponse.json({ error: 'Payload initialization failed' }, { status: 500 })
+    }
   // Fetch active segments
   let segments
   try {
@@ -48,7 +55,7 @@ export async function calculateScore(preferences: UserPreferences) {
 
   // Calculate segment matches
   const segmentMatches = segments.docs.map(segment => {
-    const score = calculateSegmentScore(dimensionScores, segment)
+    const score = calculateSegmentScore(dimensionScores)
     const confidence = calculateConfidence(score)
     console.log(`[calculateScore] Segment ID: ${segment.id}, Score: ${score}, Confidence: ${confidence}`)
     return { segment: segment.id, score, confidence }
@@ -100,8 +107,7 @@ function calculateBenefitsScore(preferences: UserPreferences) {
 }
 
 function calculateSegmentScore(
-  dimensionScores: Record<string, number>,
-  segment: any
+  dimensionScores: Record<string, number>
 ) {
   const score = Object.entries(dimensionScores).reduce((total, [dimension, score]) => {
     const weight = DIMENSION_WEIGHTS[dimension as keyof typeof DIMENSION_WEIGHTS]

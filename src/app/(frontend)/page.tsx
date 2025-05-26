@@ -6,7 +6,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Shield, Clock, DollarSign } from 'lucide-react'
 import config from '@/payload.config'
-console.log('MongoDB URI:', process.env.MONGODB_URI)
+console.log('MongoDB URI:', process.env.DATABASE_URI)
 export default async function HomePage() {
   try {
     // Maintain Payload admin access
@@ -142,7 +142,7 @@ export default async function HomePage() {
                   }
                 ].map((testimonial, index) => (
                   <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
-                    <p className="text-slate-600 mb-4">"{testimonial.quote}"</p>
+                    <p className="text-slate-600 mb-4">`{testimonial.quote}`</p>
                     <p className="font-semibold">{testimonial.author}</p>
                     <p className="text-sm text-slate-500">{testimonial.type}</p>
                   </div>

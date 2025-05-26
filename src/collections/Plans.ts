@@ -43,7 +43,7 @@ export const Plans: CollectionConfig = {
     {
       name: 'longDescription',
       type: 'richText',
-      required: true,
+      required: false,
       admin: {
         description: 'Detailed description of the plan',
       },
