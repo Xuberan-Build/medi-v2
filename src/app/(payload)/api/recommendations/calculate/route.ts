@@ -168,25 +168,11 @@ export async function GET(req: any) {  // Change Request type to any for now to 
           score: 0,
           confidence: 0
         }));
-    
-        const user = await payload.find({
-          collection: 'users',
-          where: { email: { equals: responses.email } }
-        });
-        
-        const userId = user.docs.length > 0 ? user.docs[0].id : null;
-        
-    if (!userId) {
-      console.error('[API] No user found with the provided email');
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-        
         
     // Create new recommendation record
     const recommendation = await payload.create({
       collection: 'recommendations',
       data: {
-        user: userId || 'Anonymous',
         userPreferences: {
           doctorChoice: { value: Number(responses.doctor_choice) },
           managedCare: { value: Number(responses.managed_care) },

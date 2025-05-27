@@ -275,7 +275,7 @@ export interface Segment {
  */
 export interface Recommendation {
   id: string;
-  user: string | User;
+  user?: (string | null) | User;
   userPreferences: {
     doctorChoice: {
       value: number;

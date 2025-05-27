@@ -45,7 +45,6 @@ const AdditionalBenefitsStep: React.FC = () => {
               <input
                 type="checkbox"
                 {...register('extraBenefits')}
-                checked={selectedBenefits.includes(benefit.value)}
                 checked={selectedBenefits?.includes?.(benefit.value) || false}
                 onChange={(e) => handleBenefitChange(benefit.value, e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"

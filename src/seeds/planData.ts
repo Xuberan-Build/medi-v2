@@ -28,7 +28,7 @@ interface Plan {
 
 const plansData: Plan[] = [
   {
-    name: "Medicare Advantage Basic",
+    name: "Medicare Advantage",
     planType: "medicareAdvantage",
     shortDescription: "Basic Medicare Advantage plan",
     keyFeatures: [
@@ -61,7 +61,7 @@ const plansData: Plan[] = [
     status: "published"
   },
   {
-    name: "Medicare Supplement Premium",
+    name: "Medicare Supplemen",
     planType: "medicareSupplement",
     shortDescription: "Comprehensive coverage with predictable costs",
     keyFeatures: [
