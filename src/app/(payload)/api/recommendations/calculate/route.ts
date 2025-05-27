@@ -3,12 +3,17 @@
 
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
-import payloadConfig from '@/payload.config'  // Make sure to provide the correct path to your config
+import payloadConfig from '@/payload.config'
 import type { Submission } from '../types'
-import { DimensionId, QuestionnaireResponse, RecommendationResult} from 'src/components/recommendations/engine/types'
+import {
+  DimensionId,
+  QuestionnaireResponse,
+  RecommendationResult,
+} from 'src/components/recommendations/engine/types'
 import { prepareResponsesForScoring } from '@/components/recommendations/engine/validation'
 import { calculateRecommendation } from '@/components/recommendations/engine/scoring'
-export async function GET(req: any) {  // Change Request type to any for now to access payload
+
+export async function GET(req: any) {
   console.log('[API] Received request for recommendation calculation')
 
   try {
@@ -21,7 +26,7 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       return NextResponse.json({ error: 'Submission ID is required' }, { status: 400 })
     }
 
-    // Initialize Payload instance using getPayloadHMR
+    // Initialize Payload instance
     const payload = await getPayload({ config: payloadConfig })
 
     if (!payload) {
@@ -30,11 +35,11 @@ export async function GET(req: any) {  // Change Request type to any for now to 
     }
 
     // Fetch questionnaire responses
-    const submission = await payload.findByID({
+    const submission = (await payload.findByID({
       collection: 'Questionnaires',
       id: submissionId,
-      depth: 2
-    }) as Submission | any
+      depth: 2,
+    })) as Submission | any
 
     console.log('[API] Fetched submission:', submission)
 
@@ -43,7 +48,6 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       return NextResponse.json({ error: 'Invalid submission data' }, { status: 400 })
     }
 
-    // const { responses } = submission as { responses: QuestionnaireResponses }
     const responses = submission.responses
 
     const questionnaireResponses: QuestionnaireResponse[] = [
@@ -53,24 +57,13 @@ export async function GET(req: any) {  // Change Request type to any for now to 
       { dimensionId: DimensionId.TRAVEL_NEEDS, rating: Number(responses.domestic_travel) },
       { dimensionId: DimensionId.COST_STRUCTURE, rating: Number(responses.monthly_premiums) },
       { dimensionId: DimensionId.PRESCRIPTION_NEEDS, rating: Number(responses.prescription_plans) },
-      { dimensionId: DimensionId.ADDITIONAL_BENEFITS, rating: Number(responses.dental_vision.value) }
+      {
+        dimensionId: DimensionId.ADDITIONAL_BENEFITS,
+        rating: Number(responses.dental_vision.value),
+      },
     ]
 
     console.log('[API] Raw Questionnaire Responses:', questionnaireResponses)
-
-    // const formattedResponses: { userPreferences: UserPreferences } = {
-    //   userPreferences: {
-    //     doctorChoice: { value: Number(responses.doctor_choice) || 0 },
-    //     managedCare: { value: Number(responses.managed_care) || 0 },
-    //     domesticTravel: { value: Number(responses.domestic_travel) || 0 },
-    //     yearlyMaximums: { value: Number(responses.yearly_maximums) || 0 },
-    //     monthlyPremiums: { value: Number(responses.monthly_premiums) || 0 },
-    //     prescriptionPlans: { value: Number(responses.prescription_plans) || 0 },
-    //     dentalVision: { value: Number(responses.dental_vision?.value) || 0 }
-    //   }
-    // }
-
-    // console.log('[API] Formatted responses for scoring:', formattedResponses)
 
     // Validate and sanitize responses
     const validatedResponses = prepareResponsesForScoring(questionnaireResponses)
@@ -80,95 +73,95 @@ export async function GET(req: any) {  // Change Request type to any for now to 
 
     console.log('[API] Validated Responses:', validatedResponses)
 
-
-    // const scoringResults = await calculateScore(formattedResponses.userPreferences)
-    // console.log('[API] Scoring results:', scoringResults)
-
-    // // Generate segment matches in the expected format
-    // const formattedSegmentMatches = scoringResults?.segmentMatches.length > 0
-    // ? scoringResults?.segmentMatches.map(match => ({
-    //     segment: match.segment,
-    //     score: match.score,
-    //     confidence: match.confidence,
-    //   }))
-    // : [{ segment: '67de3233711c56093c22501a', score: 0, confidence: 0 }];
-  
-    // const user = await payload.find({
-    //   collection: 'users',
-    //   where: { email: { equals: responses.email } }
-    // });
-    
-    // const userId = user.docs.length > 0 ? user.docs[0].id : null;
-    
-    // if (!userId) {
-    //   console.error('[API] No user found with the provided email');
-    //   return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    // }
-
-        // Calculate recommendation
-        const recommendationResult: RecommendationResult = calculateRecommendation(validatedResponses)
+    // Calculate recommendation
+    const recommendationResult: RecommendationResult = calculateRecommendation(validatedResponses)
     console.log('[API] Recommendation Result:', recommendationResult)
 
-        // Extract dimension scores
-        const dimensionScores = {
-          provider: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.DOCTOR_CHOICE)?.score || 0,
-          cost: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.COST_STRUCTURE)?.score || 0,
-          health: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.HEALTHCARE_USAGE)?.score || 0,
-          prescriptions: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.PRESCRIPTION_NEEDS)?.score || 0,
-          benefits: recommendationResult.primaryRecommendation.breakdown.find(b => b.dimensionId === DimensionId.ADDITIONAL_BENEFITS)?.score || 0
-        }
-    
-    // Fetching plan IDs based on their names
+    // Extract dimension scores
+    const dimensionScores = {
+      provider:
+        recommendationResult.primaryRecommendation.breakdown.find(
+          (b) => b.dimensionId === DimensionId.DOCTOR_CHOICE,
+        )?.score || 0,
+      cost:
+        recommendationResult.primaryRecommendation.breakdown.find(
+          (b) => b.dimensionId === DimensionId.COST_STRUCTURE,
+        )?.score || 0,
+      health:
+        recommendationResult.primaryRecommendation.breakdown.find(
+          (b) => b.dimensionId === DimensionId.HEALTHCARE_USAGE,
+        )?.score || 0,
+      prescriptions:
+        recommendationResult.primaryRecommendation.breakdown.find(
+          (b) => b.dimensionId === DimensionId.PRESCRIPTION_NEEDS,
+        )?.score || 0,
+      benefits:
+        recommendationResult.primaryRecommendation.breakdown.find(
+          (b) => b.dimensionId === DimensionId.ADDITIONAL_BENEFITS,
+        )?.score || 0,
+    }
 
-        const plans = await payload.find({
-          collection: 'plans',
-          where: {
-            name: { in: ['Medicare Supplement', 'Medicare Advantage'] }
-          }
-        });
-        
-        const planIds: Record<string, string> = {};
-        plans.docs.forEach((plan: any) => {
-          planIds[plan.name] = plan.id;
-        });
-        
-        if (!planIds['Medicare Supplement'] || !planIds['Medicare Advantage']) {
-          console.error('[API] One or both plans not found in the database.');
-          return NextResponse.json({ error: 'Required plans not found in the database' }, { status: 400 });
-        }
-    
-        // Prepare recommendations array for storage
-        const recommendations = recommendationResult.primaryRecommendation ? [{
-          plan: planIds[recommendationResult.primaryRecommendation.planType],
-          matchScore: recommendationResult.primaryRecommendation.totalScore,
-          isPrimary: true,
-          reasonsForMatch: recommendationResult.primaryRecommendation.breakdown.map(breakdown => ({
-            reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`
-          }))
-        }] : []
-    
-        if (recommendationResult.alternativeRecommendation) {
-          recommendations.push({
-            plan: planIds[recommendationResult.alternativeRecommendation.planType],
-            matchScore: recommendationResult.alternativeRecommendation.totalScore,
-            isPrimary: false,
-            reasonsForMatch: recommendationResult.alternativeRecommendation.breakdown.map(breakdown => ({
-              reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`
-            }))
-          })
-        }
-    
-        const segments = await payload.find({
-          collection: 'segments',
-          limit: 100
-        });
-        
-        const segmentMatches = segments.docs.map((segment: any) => ({
-          segment: segment.id,
-          score: 0,
-          confidence: 0
-        }));
-        
+    // Fetch plan IDs based on their names
+    const plans = await payload.find({
+      collection: 'plans',
+      where: {
+        name: { in: ['Medicare Supplement', 'Medicare Advantage'] },
+      },
+    })
+
+    const planIds: Record<string, string> = {}
+    plans.docs.forEach((plan: any) => {
+      planIds[plan.name] = plan.id
+    })
+
+    if (!planIds['Medicare Supplement'] || !planIds['Medicare Advantage']) {
+      console.error('[API] One or both plans not found in the database.')
+      return NextResponse.json(
+        { error: 'Required plans not found in the database' },
+        { status: 400 },
+      )
+    }
+
+    // Prepare recommendations array for storage
+    const recommendations = recommendationResult.primaryRecommendation
+      ? [
+          {
+            plan: planIds[recommendationResult.primaryRecommendation.planType],
+            matchScore: recommendationResult.primaryRecommendation.totalScore,
+            isPrimary: true,
+            reasonsForMatch: recommendationResult.primaryRecommendation.breakdown.map(
+              (breakdown) => ({
+                reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`,
+              }),
+            ),
+          },
+        ]
+      : []
+
+    if (recommendationResult.alternativeRecommendation) {
+      recommendations.push({
+        plan: planIds[recommendationResult.alternativeRecommendation.planType],
+        matchScore: recommendationResult.alternativeRecommendation.totalScore,
+        isPrimary: false,
+        reasonsForMatch: recommendationResult.alternativeRecommendation.breakdown.map(
+          (breakdown) => ({
+            reason: `${breakdown.dimensionId} scored ${breakdown.score} contributing ${Math.round(breakdown.contribution)} points`,
+          }),
+        ),
+      })
+    }
+
+    const segments = await payload.find({
+      collection: 'segments',
+      limit: 100,
+    })
+
+    const segmentMatches = segments.docs.map((segment: any) => ({
+      segment: segment.id,
+      score: 0,
+      confidence: 0,
+    }))
+
     // Create new recommendation record
     const recommendation = await payload.create({
       collection: 'recommendations',
@@ -180,32 +173,29 @@ export async function GET(req: any) {  // Change Request type to any for now to 
           yearlyMaximums: { value: Number(responses.yearly_maximums) },
           monthlyPremiums: { value: Number(responses.monthly_premiums) },
           prescriptionPlans: { value: Number(responses.prescription_plans) },
-          dentalVision: { value: Number(responses.dental_vision?.value) }
+          dentalVision: { value: Number(responses.dental_vision?.value) },
         },
         scoringResults: {
           dimensionScores,
-          segmentMatches  // If you have segment logic, add them here
+          segmentMatches,
         },
         recommendations,
         status: 'active',
         metadata: {
           createdAt: new Date().toISOString(),
           lastViewed: new Date().toISOString(),
-          source: 'Questionnaire'
-        }
-      }
+          source: 'Questionnaire',
+        },
+      },
     })
-    
-
 
     console.log('[API] Created recommendation:', recommendation)
     return NextResponse.json(recommendationResult)
-
   } catch (error) {
     console.error('[API] Detailed Error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
