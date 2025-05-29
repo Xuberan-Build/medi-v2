@@ -7,22 +7,37 @@ import Link from 'next/link'
 import { Shield, Clock, DollarSign } from 'lucide-react'
 import config from '@/payload.config'
 console.log('MongoDB URI:', process.env.DATABASE_URI)
+export const dynamic = 'force-dynamic'
 export default async function HomePage() {
   try {
     // Maintain Payload admin access
-    const headers = await getHeaders()
+    // Initialize Payload without headers for static generation
     const payload = await getPayload({ config })
-    const { user } = await payload.auth({ headers })
+    let user = null
 
+    // Only try to get user in non-static context
+    try {
+      if (typeof window === 'undefined') {
+        // Server-side: attempt to get headers, but don't fail if unavailable
+        const headers = await getHeaders().catch(() => null)
+        if (headers) {
+          const authResult = await payload.auth({ headers }).catch(() => ({ user: null }))
+          user = authResult.user
+        }
+      }
+    } catch (error) {
+      // Ignore auth errors during static generation
+      console.log('Auth skipped during static generation')
+    }
     // Fetch hero image from Payload
     let heroImageUrl = null
     const mediaResponse = await payload.find({
       collection: 'media',
       where: {
         filename: {
-          equals: 'medicare-hero.png'
-        }
-      }
+          equals: 'medicare-hero.png',
+        },
+      },
     })
 
     if (mediaResponse?.docs?.[0]?.url) {
@@ -59,7 +74,8 @@ export default async function HomePage() {
                     <span className="text-primary">5 Minutes</span>
                   </h1>
                   <p className="text-xl text-slate-600 mb-8 max-w-2xl">
-                    Answer 7 simple questions and get a personalized recommendation that fits your health needs and budget.
+                    Answer 7 simple questions and get a personalized recommendation that fits your
+                    health needs and budget.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                     <Link
@@ -126,20 +142,20 @@ export default async function HomePage() {
               <div className="grid md:grid-cols-3 gap-8">
                 {[
                   {
-                    quote: "Found the perfect plan for my budget in minutes!",
-                    author: "Linda M.",
-                    type: "Medicare Advantage"
+                    quote: 'Found the perfect plan for my budget in minutes!',
+                    author: 'Linda M.',
+                    type: 'Medicare Advantage',
                   },
                   {
-                    quote: "Their questionnaire helped me understand what I really needed.",
-                    author: "Robert S.",
-                    type: "Medigap"
+                    quote: 'Their questionnaire helped me understand what I really needed.',
+                    author: 'Robert S.',
+                    type: 'Medigap',
                   },
                   {
-                    quote: "Saved $200/month by switching to a recommended plan.",
-                    author: "Patricia K.",
-                    type: "Medicare Advantage"
-                  }
+                    quote: 'Saved $200/month by switching to a recommended plan.',
+                    author: 'Patricia K.',
+                    type: 'Medicare Advantage',
+                  },
                 ].map((testimonial, index) => (
                   <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
                     <p className="text-slate-600 mb-4">`{testimonial.quote}`</p>
